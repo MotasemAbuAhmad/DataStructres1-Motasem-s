@@ -462,7 +462,7 @@ class AVLTreeList(object):
         if dNode.getRight().isRealNode():
             dNode.getRight().setParent(dnp)
             if dNode is self.root:
-                self.root = dNode.getRight()
+                self.root = dNode.getLeft()
                 return dnp
 
             if dnp.getRight() is dNode:
@@ -566,8 +566,69 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
+        height_l = self.getRoot().getHeight()
+        height_r = lst.getRoot().getHeight()
+        if height_l <= height_r:
+            x = self.getRightMost(self.getRoot())
+            self.delete(self.getSize() - 1)
+
+
+
         return None
 
+    def getRightMost(self, node):
+        while node.getRight() != None:
+            node = node.getRight()
+        return node
+
+    def getLeftMost(self, node):
+        while node.getLeft() != None:
+            node = node.getLeft()
+        return node
+    def join(self, lst):
+        x = self.last()
+        self.delete(self.length()-1)
+
+
+
+    def reachHeight(self, node, h):
+        while node.getHeight() >= h:
+            node = node.getLeft()
+        return node
+########################################### Motasem's balance funcs##################################
+    def rotateL(self, parent):
+        child = parent.getRight()
+        parent.setRight(child.getLeft())
+        child.setLeft(parent)
+        self.updater(parent)
+        self.updater(child)
+        return child
+
+    def rotateR(self, parent):
+        child = parent.getLeft()
+        parent.setLeft(child.getRight())
+        child.setRight(parent)
+        self.updater(parent)
+        self.updater(child)
+        return child
+
+    def balance(self, node):
+        count = 0
+        bf = node.getBF()
+        if bf >= 1:
+            if node.getRight().getBF() == -1:
+                node.setRight(self.rotateR(node.getRight()))
+                count += 1
+            self.rotateL(node)
+            count += 1
+        elif bf <= 1:
+            if node.getLeft().getBF() == 1:
+                node.setLeft(self.rotateL(node.getLeft()))
+                count += 1
+            self.rotateR(node)
+            count += 1
+        return count
+#################################################################################################################
     """searches for a *value* in the list
 
     @type val: str
