@@ -156,6 +156,14 @@ class AVLTreeList(object):
         self.first = None
         self.last = None
 
+
+########### non default constrtr###########
+    '''def __init__(self, root : AVLNode):
+        self.root = root
+        self.size = root.getSize()
+        self.first = self.retrieve(0)
+        self.last = self.retrieve(root.getSize())'''
+
     """returns whether the list is empty
 
     @rtype: bool
@@ -515,7 +523,7 @@ class AVLTreeList(object):
     """
 
     def first(self):
-        return None
+        return (self.retrieve(0)).getValue()
 
     """returns the value of the last item in the list
 
@@ -524,7 +532,7 @@ class AVLTreeList(object):
     """
 
     def last(self):
-        return None
+        return (self.retrieve(self.length() - 1)).getValue()
 
     """returns an array representing list 
 
@@ -544,6 +552,13 @@ class AVLTreeList(object):
     def length(self):
         return self.size
 
+
+    def setRoot(self, root:AVLNode):
+        self.root = root
+        if root != None:
+            self.size = root.getSize()
+
+
     """splits the list at the i'th index
 
     @type i: int
@@ -555,7 +570,60 @@ class AVLTreeList(object):
     """
 
     def split(self, i):
-        return None
+        res = []
+        node = self.retNode(self.getRoot(), i)
+        nodel = node.getLeft()
+        nodeR = node.getRight()
+        leftT = AVLTreeList()
+        rightT = AVLTreeList()
+        left = leftT.getRoot()
+        right = rightT.getRoot()
+        val = node.getValue()
+        first_l = True
+        first_r = True
+        first = True
+        parent = node.getParent()
+        while parent != None:
+            if parent.getRight() == node:
+                if first_l == True and nodel.isRealNode():
+                    left = self.join(parent.getLeft(), parent, nodel)
+                    first_l=False
+                    first = False
+                elif not nodel.isRealNode():
+                    nodel = parent
+                else:
+                    left = self.join(parent.getLeft(), parent, left)
+                    first = False
+            else:
+                if first_r == True and nodeR.isRealNode():
+                    right = self.join(nodeR, parent, parent.getRight())
+                    first_r=False
+                    first = False
+                elif not nodeR.isRealNode():
+                    nodeR = parent
+                else:
+                    right = self.join(right, parent, parent.getRight())
+                    first = False
+
+            if (first == True):
+                 self.delete(i)
+            node = parent
+            parent = node.getParent()
+        leftT.setRoot(left)
+        rightT.setRoot(right)
+        res.append(leftT)
+        res.append(val)
+        res.append(rightT)
+        return res
+
+    def retNode(self, r, i):
+        smaller = (r.getLeft()).getSize()
+        if smaller < i:
+            return self.retNode(r.getRight(), i - smaller - 1)
+        elif smaller > i:
+            return self.retNode(r.getLeft(), i)
+        else:
+            return r
 
     """concatenates lst to self
 
@@ -568,13 +636,11 @@ class AVLTreeList(object):
     def concat(self, lst):
         height_l = self.getRoot().getHeight()
         height_r = lst.getRoot().getHeight()
-        if height_l <= height_r:
-            x = self.getRightMost(self.getRoot())
-            self.delete(self.getSize() - 1)
-
-
-
-        return None
+        x = self.last()
+        self.delete(self.length() - 1)
+        node = self.join(self.getRoot(), x, lst)
+        #fixup
+        return abs(height_l - height_r)
 
     def getRightMost(self, node):
         while node.getRight() != None:
@@ -585,14 +651,39 @@ class AVLTreeList(object):
         while node.getLeft() != None:
             node = node.getLeft()
         return node
-    def join(self, lst):
-        x = self.last()
-        self.delete(self.length()-1)
-
+    def join(self, lst1: AVLNode, x: AVLNode, lst2: AVLNode) -> AVLNode:
+       #######################
+        l = AVLTreeList()
+        r = AVLTreeList()
+        l.setRoot(lst1)
+        r.setRoot(lst2)
+        l.printTree("1")
+        r.printTree("2")
+       ###########################
+        if lst1 == None:
+            return lst2
+        if lst2 == None:
+            return lst1
+        c = self.reachHeight(lst2, lst1.getHeight())
+        #now we can join c and root of self
+        x.setLeft(lst1)
+        x.setRight(c)
+        parent = c.getParent()
+        if parent == None:
+            return x
+        if x != parent:
+            parent.setLeft(x)
+        #self.fixUp(parent, False)
+       #################################
+        after = AVLTreeList()
+        after.setRoot(parent)
+        after.printTree("after joining")
+       ##################################
+        return parent
 
 
     def reachHeight(self, node, h):
-        while node.getHeight() >= h:
+        while node.getHeight() > h:
             node = node.getLeft()
         return node
 ########################################### Motasem's balance funcs##################################
@@ -628,6 +719,7 @@ class AVLTreeList(object):
             self.rotateR(node)
             count += 1
         return count
+
 #################################################################################################################
     """searches for a *value* in the list
 
@@ -638,7 +730,18 @@ class AVLTreeList(object):
     """
 
     def search(self, val):
-        return None
+        node = self.root
+        return self.search_rec(self, node, val)
+
+    def search_rec(self, node, val):
+        if node.getValue() == val:
+            return -1 #maybe 0??
+        smaller = node.getLeft().size()
+        if node.getValue() < val:
+            return node.getLeft().getSize() + self.search_rec(node.getRight(), val)
+        else:
+            return self.search_rec(node.getLeft(), val)
+
 
     """returns the root of the tree representing the list
 
@@ -897,7 +1000,7 @@ class AVLTreeList(object):
 
     def checkInsert(self, lst, name, limit=15):
         passTest = True
-        #print("Check insert test (input=#", name, "#):   *(50 inserts)")
+        print("Check insert test (input=#", name, "#):   *(50 inserts)")
         if self.size != len(lst):
             passTest = False
             print("Size of given tree #", name, "# != len(lst) --> ", self.size, "!=", len(lst))
@@ -1062,14 +1165,20 @@ def arrayPrinter(t):
 def main():
     t1, t2, t3 = AVLTreeList(), AVLTreeList(), AVLTreeList()
     l1 = [str(i) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
-    """l2 = [str(i) for i in range(0, 20, 2)]  # [0, 2, 4, 6, ... , 18]
+    l2 = [str(i) for i in range(0, 20, 2)]  # [0, 2, 4, 6, ... , 18]
     l3 = [chr(i) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']
     i1 = [t1.insert(i, str(i)) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
     i2 = [t2.insert(i / 2, str(i)) for i in range(0, 20, 2)]  # [0, 2, 4, 6, ... , 18]
     i3 = [t3.insert(i - 65, chr(i)) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']"""
-    #t1.check1_i_d(l1)
-    #mistakesLst =[]
-    """for i in range(1):
+    ##########Motasem#################
+    t2.printTree("hi")
+    lst = t2.split(4)
+    lst[0].printTree("left")
+    lst[2].printTree("right")
+   # printree(lst[2])
+    '''t1.check1_i_d(l1)
+    mistakesLst =[]
+    for i in range(1):
         t, l = listsGenerator(23)
         if not t.checkInsert(l, "test "+str(i)):
             mistakesLst.append([t,l])
@@ -1078,7 +1187,7 @@ def main():
     t4.insert(1,"118")
     t4.insert(1,"107")
     t4.printTree("last")
-    print(t4.root.size)"""
+    print(t4.root.size)
     l2 = []
     for i in range(500):
         test = t2.oneRandomInsert(l2,i)
@@ -1086,7 +1195,7 @@ def main():
 
         if not test:
             print("Falseeeeeeeeeeeeeeeeeeeeeeee")
-            """nodesLst = t2.nodes()
+            nodesLst = t2.nodes()
             lstV = [nodesLst[j].value for j in range(len(nodesLst))]
             lstS = [nodesLst[j].getSize() for j in range(len(nodesLst))]
             lstH = [nodesLst[j].getHeight() for j in range(len(nodesLst))]
@@ -1098,8 +1207,8 @@ def main():
             print(lstS)
             print(lstH)
             print(lstB)
-            print(lstD)"""
-            break
+            print(lstD)
+            break'''
 
 
 
