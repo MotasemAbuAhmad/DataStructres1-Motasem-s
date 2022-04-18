@@ -225,14 +225,8 @@ class AVLTreeList(object):
             pos = self.appendNode(elem)
         else:
             pos = self.setNode(elem, i)    # Select(self, i+1) == self[i] ==> find the node located in index i
-        #print("\n#############################################################\n"
-         #     "             START INSERT        \n#####################################################\n")
-        #print("before rotate")
-        #self.printTree()
-        #self.lstDetails()
         elem.setParent(pos)
         self.size += 1
-        #counter = self.fixUp(pos, False)
         while pos is not None:
             pos.size += 1
             pos.setHeight(pos.hUpdate())
@@ -242,42 +236,22 @@ class AVLTreeList(object):
                 counter += 1
                 if bf == -2 and pos.getRight().BFcalc() == -1:
                     self.rotateLeft(pos, pos.getRight())
-                    #print("after rotate left")
-                    #self.printTree()
-                    #self.lstDetails()
                     counter += 1
                 elif bf == -2 and pos.getRight().BFcalc() == 1:
                     self.rotateRight(pos.getRight(), pos.getRight().getLeft())
-                    #print("after rotate right 1")
-                    #self.printTree()
-                    #self.lstDetails()
                     self.rotateLeft(pos, pos.getRight())
-                    #print("after rotate left 2")
-                    #self.printTree()
-                    #self.lstDetails()
                     counter += 2
                 elif bf == 2 and pos.getLeft().BFcalc() == 1:
                     self.rotateRight(pos, pos.getLeft())
-                    #print("after rotate right")
-                    #self.printTree()
-                    #self.lstDetails()
                     counter += 1
                 elif bf == 2 and pos.getLeft().BFcalc() == -1:
                     self.rotateLeft(pos.getLeft(), pos.getLeft().getRight())
-                    #print("after rotate left 1")
-                    #self.printTree()
-                    #self.lstDetails()
                     self.rotateRight(pos, pos.getLeft())
-                    #print("after rotate right 2")
-                    #self.printTree()
-                    #self.lstDetails()
                     counter += 2
                 pos = temp
 
             else:
                 pos = pos.parent
-        #print("\n#############################################################\n            END                \n"
-         #     "###################################################\n\n")
         return counter
 
     def initNode(self, val):
@@ -389,7 +363,8 @@ class AVLTreeList(object):
 
             else:
                 pos = pos.parent
-
+        if not insert and self.getSize() == 0:
+            self.root = None
         return counter
 
     """deletes the i'th item in the list
@@ -558,7 +533,8 @@ class AVLTreeList(object):
         if root != None:
             self.size = root.getSize()
 
-
+    def setSize(self, n):
+        self.size = n
     """splits the list at the i'th index
 
     @type i: int
@@ -568,49 +544,34 @@ class AVLTreeList(object):
     @returns: a list [left, val, right], where left is an AVLTreeList representing the list until index i-1,
     right is an AVLTreeList representing the list from index i+1, and val is the value at the i'th index.
     """
+    def createTreefromNode(self, node : AVLNode):
+        Tree = AVLTreeList()
+        node.setParent(None)
+        Tree.setRoot(node)
+        Tree.setSize(node.getSize())
+        return Tree
 
     def split(self, i):
         res = []
         node = self.retNode(self.getRoot(), i)
-        nodel = node.getLeft()
-        nodeR = node.getRight()
-        leftT = AVLTreeList()
-        rightT = AVLTreeList()
-        left = leftT.getRoot()
-        right = rightT.getRoot()
+        leftT = self.createTreefromNode(node.getLeft())
+        rightT = self.createTreefromNode(node.getRight())
         val = node.getValue()
-        first_l = True
-        first_r = True
-        first = True
         parent = node.getParent()
         while parent != None:
+            leftT.printTree("current left")
+            rightT.printTree("current Right")
             if parent.getRight() == node:
-                if first_l == True and nodel.isRealNode():
-                    left = self.join(parent.getLeft(), parent, nodel)
-                    first_l=False
-                    first = False
-                elif not nodel.isRealNode():
-                    nodel = parent
-                else:
-                    left = self.join(parent.getLeft(), parent, left)
-                    first = False
+                node = parent
+                parent = node.getParent()
+                leftSubTree = self.createTreefromNode(node.getLeft())
+                leftT = self.join(leftSubTree, node, leftT)
             else:
-                if first_r == True and nodeR.isRealNode():
-                    right = self.join(nodeR, parent, parent.getRight())
-                    first_r=False
-                    first = False
-                elif not nodeR.isRealNode():
-                    nodeR = parent
-                else:
-                    right = self.join(right, parent, parent.getRight())
-                    first = False
+                node = parent
+                parent = node.getParent()
+                rightSubTree = self.createTreefromNode(node.getRight())
+                rightT = self.join(rightT, node, rightSubTree)
 
-            if (first == True):
-                 self.delete(i)
-            node = parent
-            parent = node.getParent()
-        leftT.setRoot(left)
-        rightT.setRoot(right)
         res.append(leftT)
         res.append(val)
         res.append(rightT)
@@ -636,91 +597,86 @@ class AVLTreeList(object):
     def concat(self, lst):
         height_l = self.getRoot().getHeight()
         height_r = lst.getRoot().getHeight()
-        x = self.last()
+        x = self.getRightMost(self.getRoot())
         self.delete(self.length() - 1)
-        node = self.join(self.getRoot(), x, lst)
-        #fixup
+        x.setParent(None)
+        joinedTrees = self.join(self, x, lst)
+        self.setRoot(joinedTrees.getRoot())
+        self.setSize(joinedTrees.getSize())
         return abs(height_l - height_r)
 
     def getRightMost(self, node):
-        while node.getRight() != None:
+        while node.getRight().isRealNode():
             node = node.getRight()
         return node
 
     def getLeftMost(self, node):
-        while node.getLeft() != None:
+        while node.getLeft().isRealNode():
             node = node.getLeft()
         return node
-    def join(self, lst1: AVLNode, x: AVLNode, lst2: AVLNode) -> AVLNode:
-       #######################
-        l = AVLTreeList()
-        r = AVLTreeList()
-        l.setRoot(lst1)
-        r.setRoot(lst2)
-        l.printTree("1")
-        r.printTree("2")
-       ###########################
-        if lst1 == None:
+
+
+    def join(self, lst1, x: AVLNode, lst2):
+        lst1.printTree("first tree")
+        lst2.printTree("second tree")
+        if lst1.empty() and lst2.empty():
+            lst2.insert(lst2.getSize(), x.getValue())
             return lst2
-        if lst2 == None:
+        if lst1.empty():
+            lst2.insert(0 , x.getValue())
+            return lst2
+        if lst2.empty():
+            lst1.insert(lst1.getSize() , x.getValue())
             return lst1
-        c = self.reachHeight(lst2, lst1.getHeight())
-        #now we can join c and root of self
-        x.setLeft(lst1)
-        x.setRight(c)
-        parent = c.getParent()
-        if parent == None:
-            return x
-        if x != parent:
-            parent.setLeft(x)
-        #self.fixUp(parent, False)
-       #################################
-        after = AVLTreeList()
-        after.setRoot(parent)
-        after.printTree("after joining")
-       ##################################
-        return parent
 
+        lst1Height = lst1.getRoot().getHeight()
+        lst2Height = lst2.getRoot().getHeight()
+        diff = abs(lst1Height-lst2Height)
 
-    def reachHeight(self, node, h):
+        if lst1Height == lst2Height or diff == 1:#no need to rebalance
+            x.setLeft(lst1.getRoot())
+            x.setRight(lst2.getRoot())
+            self.nodeHandSupdate(x)
+            newT = self.createTreefromNode(x)
+            return newT
+
+        if lst1Height < lst2Height:
+            b = self.reachHeightLeft(lst2, lst1Height)
+            x.setLeft(lst1.getRoot())
+            x.setRight(b)
+            self.nodeHandSupdate(x)
+            c = b.getParent()
+            c.setLeft(x)
+            self.nodeHandSupdate(c)
+            self.fixUp(c, False)
+        else:
+            b = self.reachHeightRight(lst1, lst2Height)
+            x.setLeft(b)
+            x.setRight(lst2.getRoot())
+            self.nodeHandSupdate(x)
+            c = b.getParent()
+            c.setRight(x)
+            self.nodeHandSupdate(c)
+            self.fixUp(c, False)
+        if lst1Height < lst2Height:
+            return lst2
+        else:
+            return lst1
+
+    def nodeHandSupdate(self, node:AVLNode):
+        node.setSize(node.getLeft().getSize() + node.getRight().getSize() + 1)
+        node.setHeight(max(node.getLeft().getHeight(), node.getRight().getHeight()) + 1)
+    def reachHeightLeft(self, tree, h):
+        node = tree.getRoot()
         while node.getHeight() > h:
             node = node.getLeft()
         return node
-########################################### Motasem's balance funcs##################################
-    def rotateL(self, parent):
-        child = parent.getRight()
-        parent.setRight(child.getLeft())
-        child.setLeft(parent)
-        self.updater(parent)
-        self.updater(child)
-        return child
+    def reachHeightRight(self, tree, h):
+        node = tree.getRoot()
+        while node.getHeight() > h:
+            node = node.getRight()
+        return node
 
-    def rotateR(self, parent):
-        child = parent.getLeft()
-        parent.setLeft(child.getRight())
-        child.setRight(parent)
-        self.updater(parent)
-        self.updater(child)
-        return child
-
-    def balance(self, node):
-        count = 0
-        bf = node.getBF()
-        if bf >= 1:
-            if node.getRight().getBF() == -1:
-                node.setRight(self.rotateR(node.getRight()))
-                count += 1
-            self.rotateL(node)
-            count += 1
-        elif bf <= 1:
-            if node.getLeft().getBF() == 1:
-                node.setLeft(self.rotateL(node.getLeft()))
-                count += 1
-            self.rotateR(node)
-            count += 1
-        return count
-
-#################################################################################################################
     """searches for a *value* in the list
 
     @type val: str
@@ -1164,17 +1120,24 @@ def arrayPrinter(t):
 
 def main():
     t1, t2, t3 = AVLTreeList(), AVLTreeList(), AVLTreeList()
-    l1 = [str(i) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
-    l2 = [str(i) for i in range(0, 20, 2)]  # [0, 2, 4, 6, ... , 18]
+    l1 = [str(i) for i in range(100)]  # [0, 1, 2, 3, ... , 9]
+    l2 = [str(i) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     l3 = [chr(i) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']
-    i1 = [t1.insert(i, str(i)) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
-    i2 = [t2.insert(i / 2, str(i)) for i in range(0, 20, 2)]  # [0, 2, 4, 6, ... , 18]
+    i1 = [t1.insert(i, str(i)) for i in range(100)]  # [0, 1, 2, 3, ... , 9]
+    i2 = [t2.insert(i / 2, str(i)) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     i3 = [t3.insert(i - 65, chr(i)) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']"""
     ##########Motasem#################
-    t2.printTree("hi")
-    lst = t2.split(4)
-    lst[0].printTree("left")
-    lst[2].printTree("right")
+    t1.printTree("self list")
+    t3.printTree("other list")
+    xx = t1.concat(t3)
+    t1.printTree("after concat")
+    t1.check("t1 tree")
+    '''lst = t1.split(31)
+    lst[0].printTree("left part")
+    print("the value of 100th element is", lst[1])
+    lst[2].printTree("right part")
+    lst[0].check("left  part")
+    lst[2].check("right part")'''
    # printree(lst[2])
     '''t1.check1_i_d(l1)
     mistakesLst =[]
