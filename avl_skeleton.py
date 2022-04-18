@@ -1130,6 +1130,7 @@ def main():
 
     t1.printTree("self list")
     t3.printTree("other list")
+    t1.check("t1 tree")
     xx = t1.concat(t3)
     t1.printTree("after concat")
     t1.check("t1 tree")
