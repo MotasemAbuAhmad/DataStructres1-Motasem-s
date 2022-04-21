@@ -586,6 +586,11 @@ class AVLTreeList(object):
                 rightSubTree = self.createTreefromNode(node.getRight())
                 rightT = self.join(rightT, node, rightSubTree)
 
+        # Updating first and last in each tree
+        leftT.first = self.first
+        leftT.last = self.getRightMost(leftT.getRoot())
+        rightT.first = self.getLeftMost(rightT.getRoot())
+        rightT.last = self.last
         res.append(leftT)
         res.append(val)
         res.append(rightT)
@@ -611,6 +616,7 @@ class AVLTreeList(object):
     def concat(self, lst):
         height_l = self.getRoot().getHeight()
         height_r = lst.getRoot().getHeight()
+        self.last = self.getRightMost(lst.getRoot())
         x = self.getRightMost(self.getRoot())
         self.delete(self.length() - 1)
         x.setParent(None)
