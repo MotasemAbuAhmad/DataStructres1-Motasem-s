@@ -516,7 +516,21 @@ class AVLTreeList(object):
     """
 
     def listToArray(self):
+        res = [i for i in range(self.size)]
+        ### Travel in tree and then add elements by rank as indexes ###
+        res1 = []
+        return AVLTreeList.ltoa(self, self.root, res1)
+
         return res
+
+    """real l-to-a func"""
+
+    def ltoa(self, node, res):
+        if node is None:
+            return
+        AVLTreeList.ltoa(self, node.left, res)
+        res.append(node.value)
+        AVLTreeList.ltoa(self, node.right, res)
 
     """returns the size of the list 
 
@@ -617,8 +631,7 @@ class AVLTreeList(object):
 
 
     def join(self, lst1, x: AVLNode, lst2):
-        lst1.printTree("first tree")
-        lst2.printTree("second tree")
+
         if lst1.empty() and lst2.empty():
             lst2.insert(lst2.getSize(), x.getValue())
             return lst2
@@ -646,6 +659,7 @@ class AVLTreeList(object):
             x.setRight(b)
             self.nodeHandSupdate(x)
             c = b.getParent()
+            x.setParent(c)
             c.setLeft(x)
             self.nodeHandSupdate(c)
             self.fixUp(c, False)
@@ -655,6 +669,7 @@ class AVLTreeList(object):
             x.setRight(lst2.getRoot())
             self.nodeHandSupdate(x)
             c = b.getParent()
+            x.setParent(c)
             c.setRight(x)
             self.nodeHandSupdate(c)
             self.fixUp(c, False)
