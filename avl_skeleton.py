@@ -124,19 +124,31 @@ class AVLNode(object):
             return False
         return True
 
+    """returns the size of the node
+        @rtype: int
+        @returns: int if not-empty, 0 if empty"""
+
     def getSize(self):
         return self.size
 
+    """sets the size of the node
+    @type s: int
+    @pre: 0 <= i
+    @param s: new size of node"""
     def setSize(self, s):
         self.size = s
 
-
+    """ calculates the Balance Factor of node
+    @rtype: int
+    @returns: the balance factor of node"""
     def BFcalc(self):
         return (lambda n: n.getLeft().getHeight() - n.getRight().getHeight())(self)
 
+    """ updates the height of node"""
+
     def hUpdate(self):
         return (lambda n: max(n.getRight().getHeight(), n.getLeft().getHeight()) + 1)(self)
-
+    """ updates the size of node"""
     def sUpdate(self):
         return (lambda n: n.getRight().getSize() + n.getLeft().getSize() + 1)(self)
 """
@@ -254,6 +266,10 @@ class AVLTreeList(object):
                 pos = pos.parent
         return counter
 
+    """ create a new Node with Value val
+    @type val: data
+    @rtype: AVLNode
+    @returns: new AVLNode"""
     def initNode(self, val):
         elem = AVLNode(val)
         vrNodeR = AVLNode(None, -1, 0)
@@ -264,13 +280,22 @@ class AVLTreeList(object):
         vrNodeL.setParent(elem)
         return elem
 
+    """appends a new Node to the list
+    @type elem: AVLNode
+    @rtype: AVLNode
+    @returns: the new parent of elem"""
     def appendNode(self, elem):
         pos = self.root
         while pos.getRight().getHeight() != -1:
             pos = pos.right
         pos.setRight(elem)
         return pos
-
+    """ sets a new node at index i
+    @type elem: AVLNode
+    @type i: int
+    @pre: 0 <= i < self.length() 
+    @rtype: AVLNode
+    @returns: the new parent of elem"""
     def setNode(self, elem, i, pr=False):
         pos = self.retrieve_rec(self.root, i + 1, pr)
         if not pos.left.isRealNode():  # if pos.left is vr
@@ -334,7 +359,10 @@ class AVLTreeList(object):
                ["l.right.height: " + str(l.getRight().getHeight())]])"""
         l.setHeight(l.hUpdate())
 
-
+    """ rebalances the tree upwards starting from node pos
+    @type pos: AVLNode
+    @param pos: node to start rebalancing upwards
+    @returns: number of balancing operations conducted"""
     def fixUp(self, pos, insert=True):
         counter = 0
         while pos is not None:
@@ -426,7 +454,10 @@ class AVLTreeList(object):
         if self.size == 0:
             self.root = None
         return counter
-
+    """ deletes a leaf
+    @type dNode: AVLNode
+    @param dNode: the leaf to be deleted
+    @returns: the parent of deleted leaf"""
     def deleteLeaf(self, dNode):
         dnp = dNode.getParent()
         if dNode is not self.root:
@@ -567,6 +598,8 @@ class AVLTreeList(object):
 
     def split(self, i):
         res = []
+        firstSelf = self.getFirst()
+        lastSelf = self.getLast()
         node = self.retNode(self.getRoot(), i)
         leftT = self.createTreefromNode(node.getLeft())
         rightT = self.createTreefromNode(node.getRight())
@@ -587,10 +620,10 @@ class AVLTreeList(object):
                 rightT = self.join(rightT, node, rightSubTree)
 
         # Updating first and last in each tree
-        leftT.first = self.first
-        leftT.last = self.getRightMost(leftT.getRoot())
-        rightT.first = self.getLeftMost(rightT.getRoot())
-        rightT.last = self.last
+        leftT.setFirst(firstSelf)
+        leftT.setLast(self.getRightMost(leftT.getRoot()))
+        rightT.setFirst(self.getLeftMost(rightT.getRoot()))
+        rightT.setLast(lastSelf)
         res.append(leftT)
         res.append(val)
         res.append(rightT)
@@ -614,9 +647,21 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
+        if self.getRoot() is None and lst.getRoot() is None:
+            return 0 #both empty trees
+        elif self.getRoot() is None:
+            height_r = lst.getRoot().getHeight()
+            self.setRoot(lst.getRoot())
+            self.setSize(lst.getSize())
+            self.setFirst(lst.getFirst())
+            self.setLast(lst.getLast())
+            return height_r
+        elif lst.getRoot() is None:
+            height_l = self.getRoot().getHeight()
+            return height_l
         height_l = self.getRoot().getHeight()
         height_r = lst.getRoot().getHeight()
-        self.last = self.getRightMost(lst.getRoot())
+        self.setLast(lst.getLast())
         x = self.getRightMost(self.getRoot())
         self.delete(self.length() - 1)
         x.setParent(None)
