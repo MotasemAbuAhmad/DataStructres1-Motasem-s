@@ -167,6 +167,8 @@ class AVLTreeList(object):
         self.size = 0
         self.first = None
         self.last = None
+        self.firstItem = None
+        self.lastItem = None
 
 
 ########### non default constrtr###########
@@ -596,6 +598,18 @@ class AVLTreeList(object):
         Tree.setSize(node.getSize())
         return Tree
 
+    def getFirst(self):
+        return self.firstItem
+
+    def setFirst(self, node):
+        self.firstItem = node
+
+    def getLast(self):
+        return self.lastItem
+
+    def setLast(self, node):
+        self.lastItem = node
+
     def split(self, i):
         res = []
         firstSelf = self.getFirst()
@@ -606,8 +620,6 @@ class AVLTreeList(object):
         val = node.getValue()
         parent = node.getParent()
         while parent != None:
-            leftT.printTree("current left")
-            rightT.printTree("current Right")
             if parent.getRight() == node:
                 node = parent
                 parent = node.getParent()
@@ -620,10 +632,12 @@ class AVLTreeList(object):
                 rightT = self.join(rightT, node, rightSubTree)
 
         # Updating first and last in each tree
-        leftT.setFirst(firstSelf)
-        leftT.setLast(self.getRightMost(leftT.getRoot()))
-        rightT.setFirst(self.getLeftMost(rightT.getRoot()))
-        rightT.setLast(lastSelf)
+        if leftT.getRoot() is not None:
+            leftT.setFirst(firstSelf)
+            leftT.setLast(self.getRightMost(leftT.getRoot()))
+        if rightT.getRoot() is not None:
+            rightT.setFirst(self.getLeftMost(rightT.getRoot()))
+            rightT.setLast(lastSelf)
         res.append(leftT)
         res.append(val)
         res.append(rightT)
@@ -1196,28 +1210,25 @@ def arrayPrinter(t):
 
 def main():
     t1, t2, t3 = AVLTreeList(), AVLTreeList(), AVLTreeList()
-    l1 = [str(i) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
+    l1 = [str(i) for i in range(50)]  # [0, 1, 2, 3, ... , 9]
     l2 = [str(i) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     l3 = [chr(i) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']
-    i1 = [t1.insert(i, str(i)) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
-    l1 = [str(i) for i in range(20)]
-    i1 = [t1.insert(i, str(i)) for i in range(20)]
+    i1 = [t1.insert(i, str(i)) for i in range(50)]  # [0, 1, 2, 3, ... , 9]
     i2 = [t2.insert(i / 2, str(i)) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     i3 = [t3.insert(i - 65, chr(i)) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']"""
     ##########Motasem#################
 
     t1.printTree("self list")
-    print(t1.search('10'))
     """t1.check("t1 tree")
     xx = t1.concat(t3)
     t1.printTree("after concat")
     t1.check("t1 tree")"""
-    '''lst = t1.split(31)
+    lst = t1.split(30)
     lst[0].printTree("left part")
     print("the value of 100th element is", lst[1])
     lst[2].printTree("right part")
     lst[0].check("left  part")
-    lst[2].check("right part")'''
+    lst[2].check("right part")
    # printree(lst[2])
     '''t1.check1_i_d(l1)
     mistakesLst =[]
