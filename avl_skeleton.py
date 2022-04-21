@@ -752,17 +752,27 @@ class AVLTreeList(object):
     """
 
     def search(self, val):
-        node = self.root
-        return self.search_rec(self, node, val)
+        node = self.getRoot()
+        res =  self.search_rec(node, val)
+        if res == -1:
+            return -1
+        else:
+            return res
+
 
     def search_rec(self, node, val):
+        if not node.isRealNode():
+            return -1
+        smaller = node.getLeft().getSize()
         if node.getValue() == val:
-            return -1 #maybe 0??
-        smaller = node.getLeft().size()
-        if node.getValue() < val:
-            return node.getLeft().getSize() + self.search_rec(node.getRight(), val)
-        else:
-            return self.search_rec(node.getLeft(), val)
+            return 0 + smaller #maybe 0??
+        left = self.search_rec(node.getLeft(), val)
+        if left != -1:
+            return left
+        right = self.search_rec(node.getRight(), val)
+        if right != -1:
+            return right + smaller +1
+        return -1
 
 
     """returns the root of the tree representing the list
@@ -1186,20 +1196,22 @@ def arrayPrinter(t):
 
 def main():
     t1, t2, t3 = AVLTreeList(), AVLTreeList(), AVLTreeList()
-    l1 = [str(i) for i in range(100)]  # [0, 1, 2, 3, ... , 9]
+    l1 = [str(i) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
     l2 = [str(i) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     l3 = [chr(i) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']
-    i1 = [t1.insert(i, str(i)) for i in range(100)]  # [0, 1, 2, 3, ... , 9]
+    i1 = [t1.insert(i, str(i)) for i in range(10)]  # [0, 1, 2, 3, ... , 9]
+    l1 = [str(i) for i in range(20)]
+    i1 = [t1.insert(i, str(i)) for i in range(20)]
     i2 = [t2.insert(i / 2, str(i)) for i in range(0, 300, 2)]  # [0, 2, 4, 6, ... , 18]
     i3 = [t3.insert(i - 65, chr(i)) for i in range(65, 91)]  # ['a', 'b', 'c', ... , 'z']"""
     ##########Motasem#################
 
     t1.printTree("self list")
-    t3.printTree("other list")
-    t1.check("t1 tree")
+    print(t1.search('10'))
+    """t1.check("t1 tree")
     xx = t1.concat(t3)
     t1.printTree("after concat")
-    t1.check("t1 tree")
+    t1.check("t1 tree")"""
     '''lst = t1.split(31)
     lst[0].printTree("left part")
     print("the value of 100th element is", lst[1])
